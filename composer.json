@@ -1,0 +1,13 @@
+{
+    "name": "duduapp/file-server",
+    "authors": [
+        {
+            "name": "lilocon",
+            "email": "897798676@qq.com"
+        }
+    ],
+    "require": {
+        "intervention/image": "^2.4",
+        "slim/slim": "^3.0"
+    }
+}
