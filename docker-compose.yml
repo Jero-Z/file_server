@@ -2,7 +2,7 @@ version: '2'
 
 services:
   php:
-    image: php:alpine
+    build: ./docker/php
     restart: always
     volumes:
       - ./:/www
