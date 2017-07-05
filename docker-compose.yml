@@ -1,0 +1,11 @@
+version: '2'
+
+services:
+  php:
+    image: php:alpine
+    restart: always
+    volumes:
+      - ./:/www
+    ports:
+      - "8001:8001"
+    command: php -S 0.0.0.0:8001 -t /www/public
