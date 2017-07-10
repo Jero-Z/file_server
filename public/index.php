@@ -99,7 +99,10 @@ $app->post('/upload', function (Request $req, Response $res, $args = []) {
  * @return crop temp file path
  */
 $app->post('/crop', function (Request $req, Response $res, $args = []) {
-
+    $data = [
+        'message'=>'',
+        'url'=>''
+    ];
     // todo
     $crop_temp = __DIR__ .'/files/temp/'.uniqid().'.png';
     /*
@@ -129,7 +132,10 @@ $app->post('/crop', function (Request $req, Response $res, $args = []) {
  * @return permanent file path
  */
 $app->post('/save', function (Request $req, Response $res, $args = []) {
-
+    $data = [
+        'message'=>'',
+        'url'=>''
+    ];
     // todo
     $params = $req->getParsedBody();
     $temp_path = $params['temp_path'];
