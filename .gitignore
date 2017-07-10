@@ -9,3 +9,4 @@ vendor/
 .idea
 /public/files/contexts/*
 /public/files/temp/*
+.DS_Store
