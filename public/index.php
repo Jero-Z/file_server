@@ -66,8 +66,9 @@ $app->post('/upload', function (Request $req, Response $res, $args = []) {
 
     //判定资源是否合法
     if (!is_array($uploadedFiles) || empty($uploadedFiles)){
+
         $data['message']='上传有误，请重新上传';
-        return json_encode($data);
+        return $res->withJson($data);
     }
     //弹出上传数据为一维数组
     $file = array_pop($uploadedFiles);
@@ -77,19 +78,20 @@ $app->post('/upload', function (Request $req, Response $res, $args = []) {
     //判断mime类型
     if (!in_array($resource->mime(),$allow_type)){
         $data['message']='上传类型错误，请确定类型！';
-        return json_encode($data);
+        return $res->withJson($data);
     }
     //验证通过后转为PNG类型图片 存储于临时目录下
     $result = $resource->save($temp_file_name);
     if (!$result) {
         $data['message'] = 'error';
         $data['url'] = '';
-        return json_encode($data);
+        return $res->withJson($data);
     }
 
     $data['message'] = 'success';
     $data['url'] = $temp_file_name;
-    return json_encode($data);
+
+    return $res->withJson($data);
 });
 
 /*
@@ -118,11 +120,11 @@ $app->post('/crop', function (Request $req, Response $res, $args = []) {
     if (!$result) {
         $data['message'] ='error';
         $data['url'] = '';
-        return json_encode($data);
+        return $res->withJson($data);
     }
     $data['message'] = 'success';
     $data['url'] = $crop_temp;
-    return json_encode($data);
+    return $res->withJson($data);
 });
 
 /*
@@ -149,12 +151,12 @@ $app->post('/save', function (Request $req, Response $res, $args = []) {
     if (!$result) {
         $data['message'] ='error';
         $data['url'] = '';
-        return json_encode($data);
+        return $res->withJson($data);
     }
 
     $data['message'] = 'success';
     $data['url'] = $permanent_file_path;
-    return json_encode($data);
+    return $res->withJson($data);
 });
 
 
