@@ -75,16 +75,9 @@ $app->post('/upload', function (Request $req, Response $res, $args = []) {
     $uploadedFiles = $req->getUploadedFiles();
 
     //判定资源是否合法
-<<<<<<< HEAD
     if (!is_array($uploadedFiles) || empty($uploadedFiles)) {
         $data['message'] = '上传有误，请重新上传';
-        return json_encode($data);
-=======
-    if (!is_array($uploadedFiles) || empty($uploadedFiles)){
-
-        $data['message']='上传有误，请重新上传';
         return $res->withJson($data);
->>>>>>> master
     }
     //弹出上传数据为一维数组
     $file = array_pop($uploadedFiles);
@@ -92,15 +85,9 @@ $app->post('/upload', function (Request $req, Response $res, $args = []) {
     $resource = Image::make($file->file);
 
     //判断mime类型
-<<<<<<< HEAD
     if (!in_array($resource->mime(), $allow_type)) {
         $data['message'] = '上传类型错误，请确定类型！';
         return json_encode($data);
-=======
-    if (!in_array($resource->mime(),$allow_type)){
-        $data['message']='上传类型错误，请确定类型！';
-        return $res->withJson($data);
->>>>>>> master
     }
     //验证通过后转为PNG类型图片 存储于临时目录下
     $result = $resource->save($temp_file_path);
@@ -110,14 +97,9 @@ $app->post('/upload', function (Request $req, Response $res, $args = []) {
         return $res->withJson($data);
     }
     $data['message'] = 'success';
-<<<<<<< HEAD
     $data['url'] = $_SERVER["HTTP_HOST"] . $temp_file_name;
-    return json_encode($data);
-=======
-    $data['url'] = $temp_file_name;
 
     return $res->withJson($data);
->>>>>>> master
 });
 
 /*
@@ -160,12 +142,12 @@ $app->post('/crop', function (Request $req, Response $res, $args = []) {
         $data['url'] = '';
         return $res->withJson($data);
     }
-<<<<<<< HEAD
-=======
+
+
     $data['message'] = 'success';
     $data['url'] = $crop_temp;
+
     return $res->withJson($data);
->>>>>>> master
 });
 
 /*
@@ -205,13 +187,10 @@ $app->post('/save', function (Request $req, Response $res, $args = []) {
     }
 
     $data['message'] = 'success';
-<<<<<<< HEAD
     $data['url'] = $permanent_file_url;
-    return json_encode($data);
-=======
-    $data['url'] = $permanent_file_path;
+
     return $res->withJson($data);
->>>>>>> master
+
 });
 
 
