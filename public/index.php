@@ -13,7 +13,6 @@
 
 use Slim\Http\Request;
 use Slim\Http\Response;
-use Slim\Http\UploadedFile;
 use Intervention\Image\ImageManagerStatic as Image;
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -23,19 +22,28 @@ $app = new \Slim\App();
 
 $container = $app->getContainer();
 
+//网站url
+$container['host'] = $_SERVER["HTTP_HOST"];
 //临时文件路径
-$container['tmp_file_dir'] = __DIR__ .'/files/temp';
-
+$container['tmp_file_dir'] = '/files/temp';
 //永久文件目录
-$container['files_contexts_dir'] = __DIR__ .'/files/contexts/';
+$container['files_contexts_dir'] = '/files/contexts/';
 
 $app->get('/', function (Request $req, Response $res, $args = []) {
     return 'file-server';
 });
-function Directory($dir){
+//创建文件路径
+function Directory($dir)
+{
 
-    return  is_dir ( $dir ) or Directory(dirname( $dir )) and  mkdir ( $dir , 0777);
+    return is_dir($dir) or Directory(dirname($dir)) and mkdir($dir, 0777);
 
+}
+
+//url转为系统路径
+function convertUrl($url,$host)
+{
+   return  WEB_ROOT . mb_substr($url, strlen($host));
 }
 /*
  * 上传图片文件 返回临时图片地址
@@ -43,10 +51,12 @@ function Directory($dir){
   * @return string temp file path
  */
 $app->post('/upload', function (Request $req, Response $res, $args = []) {
-    $temp_file_name = $this->get('tmp_file_dir').'/'.uniqid().'.png';
+
+    $temp_file_name = $this->get('tmp_file_dir') . '/' . uniqid() . '.png';
+    $temp_file_path = WEB_ROOT . $temp_file_name;
     //判断文件夹是否存在
-    if(!file_exists($this->get('tmp_file_dir'))){
-        Directory($this->get('tmp_file_dir'));
+    if (!file_exists(WEB_ROOT.$this->get('tmp_file_dir'))) {
+        Directory(WEB_ROOT.$this->get('tmp_file_dir'));
     }
 
     // 图片文件全部转为png
@@ -58,37 +68,36 @@ $app->post('/upload', function (Request $req, Response $res, $args = []) {
     ];
     // todo
     $data = [
-        'message'=>'',
-        'url'=>''
+        'message' => '',
+        'url' => ''
     ];
     //获取上传资源
     $uploadedFiles = $req->getUploadedFiles();
 
     //判定资源是否合法
-    if (!is_array($uploadedFiles) || empty($uploadedFiles)){
-        $data['message']='上传有误，请重新上传';
+    if (!is_array($uploadedFiles) || empty($uploadedFiles)) {
+        $data['message'] = '上传有误，请重新上传';
         return json_encode($data);
     }
     //弹出上传数据为一维数组
     $file = array_pop($uploadedFiles);
 
-    $resource =Image::make($file->file);
+    $resource = Image::make($file->file);
 
     //判断mime类型
-    if (!in_array($resource->mime(),$allow_type)){
-        $data['message']='上传类型错误，请确定类型！';
+    if (!in_array($resource->mime(), $allow_type)) {
+        $data['message'] = '上传类型错误，请确定类型！';
         return json_encode($data);
     }
     //验证通过后转为PNG类型图片 存储于临时目录下
-    $result = $resource->save($temp_file_name);
+    $result = $resource->save($temp_file_path);
     if (!$result) {
         $data['message'] = 'error';
         $data['url'] = '';
         return json_encode($data);
     }
-
     $data['message'] = 'success';
-    $data['url'] = $temp_file_name;
+    $data['url'] = $_SERVER["HTTP_HOST"] . $temp_file_name;
     return json_encode($data);
 });
 
@@ -100,29 +109,38 @@ $app->post('/upload', function (Request $req, Response $res, $args = []) {
  */
 $app->post('/crop', function (Request $req, Response $res, $args = []) {
     $data = [
-        'message'=>'',
-        'url'=>''
+        'message' => '',
+        'url' => ''
     ];
     // todo
-    $crop_temp = __DIR__ .'/files/temp/'.uniqid().'.png';
+    $crop_temp_name = '/files/temp/' . uniqid() . '.png';
+    $crop_temp_path = WEB_ROOT . $crop_temp_name;
     /*
      * 1.接受裁剪参数
      * 2.进行裁剪，生成临时图片地址并保存到临时目录
      * 3.返回临时图片地址
      */
     $parsedBody = $req->getParsedBody();
+    $path = convertUrl($parsedBody['url'],$this->get('host'));
+    //异常处理
+    try {
+        $image = Image::make($path);
 
-    $image = Image::make($parsedBody['url']);
+        $result = $image->crop($parsedBody['width'], $parsedBody['height'], $parsedBody['x'], $parsedBody['y'])->save($crop_temp_path);
+        if (!$result) {
+            $data['message'] = 'error';
+            $data['url'] = '';
+            return json_encode($data);
+        }
+        $data['message'] = 'success';
+        $data['url'] = $_SERVER["HTTP_HOST"] . $crop_temp_name;
+        return json_encode($data);
 
-    $result = $image->crop($parsedBody['width'],$parsedBody['height'],$parsedBody['x'],$parsedBody['y'])->save($crop_temp);
-    if (!$result) {
-        $data['message'] ='error';
+    } catch (Exception $exception) {
+        $data['message'] = 'error';
         $data['url'] = '';
         return json_encode($data);
     }
-    $data['message'] = 'success';
-    $data['url'] = $crop_temp;
-    return json_encode($data);
 });
 
 /*
@@ -132,28 +150,37 @@ $app->post('/crop', function (Request $req, Response $res, $args = []) {
  * @return permanent file path
  */
 $app->post('/save', function (Request $req, Response $res, $args = []) {
+
     $data = [
-        'message'=>'',
-        'url'=>''
+        'message' => '',
+        'url' => ''
     ];
     // todo
     $params = $req->getParsedBody();
-    $temp_path = $params['temp_path'];
+
+    $path = convertUrl($params['temp_path'],$this->get('host'));
+    //用户选择保存路径用户
     $save_name = $params['context'] ? $params['context'] : 'default';
-    $permanent_file_path = $this->get('files_contexts_dir').'/'.$save_name.'/'.uniqid().'.png';
+    //生成永久链接地址 路径
+    $permanent_file_path = $this->get('files_contexts_dir') . $save_name . '/' . uniqid() . '.png';
+    $permanent_file_url = $_SERVER["HTTP_HOST"] . $permanent_file_path;
 
-    Directory($this->get('files_contexts_dir').$save_name);
+    //文件目录创建
+    if (!file_exists(WEB_ROOT.$this->get('files_contexts_dir').$save_name)) {
+        Directory(WEB_ROOT.$this->get('files_contexts_dir').$save_name);
+    }
+    //生成永久文件
+    $result = Image::make($path)->save(WEB_ROOT.$permanent_file_path);
 
-    $result = Image::make($temp_path)->save($permanent_file_path);
-
+    //返回结果
     if (!$result) {
-        $data['message'] ='error';
+        $data['message'] = 'error';
         $data['url'] = '';
         return json_encode($data);
     }
 
     $data['message'] = 'success';
-    $data['url'] = $permanent_file_path;
+    $data['url'] = $permanent_file_url;
     return json_encode($data);
 });
 
