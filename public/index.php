@@ -232,8 +232,7 @@ $app->post('/fileUpload', function (Request $req, Response $res, $args = []) {
 
     $uploadedFiles = $req->getUploadedFiles();
     //判断文件夹是否存在
-//    var_dump($_SERVER["DOCUMENT_ROOT"]);die;
-    dirIsExists(WEB_ROOT . '../../' . $this->get('wechat_api_file_path'));
+    dirIsExists('./../' . $this->get('wechat_api_file_path'));
     //判断文件是否合法
     $file = isLawful($uploadedFiles, $res);
     //获取文件名
@@ -241,7 +240,7 @@ $app->post('/fileUpload', function (Request $req, Response $res, $args = []) {
     //生成唯一文件名
     $uniquenessName = $uniqid . substr($fileName, strrpos($fileName, '.'));
     //生成保存地址
-    $filePath = WEB_ROOT . '../../' . $this->get('wechat_api_file_path') . '/' . $uniquenessName;
+    $filePath = './../' . $this->get('wechat_api_file_path') . '/' . $uniquenessName;
     //返回json数据
     try {
 
