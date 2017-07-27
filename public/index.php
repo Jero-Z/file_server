@@ -256,6 +256,12 @@ $app->post('/fileUpload', function (Request $req, Response $res, $args = []) {
     }
 
 });
+
+/**
+ * bash64图片上传
+ * @param stream{json}
+ * @return image uniqid
+ */
 $app->post('/streamUploadImage', function (Request $req, Response $res, $args = []) {
 
     $data = [];
