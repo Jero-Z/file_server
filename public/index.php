@@ -256,5 +256,40 @@ $app->post('/fileUpload', function (Request $req, Response $res, $args = []) {
     }
 
 });
+$app->post('/streamUploadImage', function (Request $req, Response $res, $args = []) {
 
+    $data = [];
+
+    $stream = $req->getParsedBody();
+
+    $name = uniqid().'.png';
+    $filePath = WEB_ROOT.$this->get('files_contexts_dir').'default/';
+    $fullPath = $filePath.$name;
+
+    $fullStream = array_pop($stream);
+
+    if (empty($fileStream)){
+        $data['message'] = 'error';
+        $data['name'] = '';
+    }
+    //文件目录创建
+    dirIsExists($filePath);
+
+    $imgStream = base64_decode(array_pop(explode(',',$fullStream)));
+
+    $result = file_put_contents($fullPath,$imgStream);
+    //检查图片写入是否成功
+    $imgSize = getimagesize($fullPath);
+
+    if ($result<=0 || !$imgSize){
+        $data['message'] = 'error';
+        $data['name'] = '';
+    }
+
+    $data['message'] = 'success';
+    $data['name'] = $name;
+
+    return $res->withJson($data);
+
+});
 $app->run();
