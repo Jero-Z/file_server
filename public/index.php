@@ -291,9 +291,12 @@ $app->post('/streamUploadImage', function (Request $req, Response $res, $args = 
         $data['message'] = 'error';
         $data['name'] = '';
     }
+    $permanent_file_path = $this->get('files_contexts_dir')  . 'default/' . $name;
+
+    $permanent_file_url = $_SERVER["HTTP_HOST"] . $permanent_file_path;
 
     $data['message'] = 'success';
-    $data['name'] = $name;
+    $data['name'] = $permanent_file_url;
 
     return $res->withJson($data);
 
