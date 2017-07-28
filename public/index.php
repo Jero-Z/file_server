@@ -39,30 +39,63 @@ $container['wechat_api_file_path'] = 'wechat_api_file';
 $app->get('/', function (Request $req, Response $res, $args = []) {
     $comments = <<<comment
 图片上传
-1.
-/upload 
-@params {resource} name=file  文件名为file的图片资源
-@return {string}  temp file path 返回临时图片地址
-2.
-/crop
-@params {string} width,height [x,y] 裁剪宽高位置
-@params {string} temp url path [url] 临时图片地址
-@return {string} crop temp file path 裁剪后临时图片地址
-3.
-/save
-@param {string} context dir name 自定义保存的文件目录,默认为为default
-@param {string} crop temp file path  裁剪后临时图片地址
-@return {string} permanent file path 永久文件地址
+1./upload 接口上传,返回临时文件路径
+    {post}
+    /upload 
+    @params {resource} name=file  文件名为file的图片资源
+    @return {json}  temp file path 返回临时图片地址
+    返回数据示例
+    {
+        "message": "success",
+        "url": image path
+    }
+
+2.通过/crop 接口裁切,返回新的临时图片地址
+    {post}
+    /crop 
+    @params {string} width,height,x,y 裁剪宽高位置x.y 开始位置
+    @params {string} temp url path [url] 临时图片地址
+    @return {string} crop temp file path 裁剪后临时图片地址
+    发送示例请求
+    {"width":"980","height":"760","x":"1","y":"1","url":"0.0.0.0:8001/files/temp/597ad59d1c5e7.png"}
+    返回数据示例
+    {
+        "message": "success",
+        "url": image path
+    }
+3.确定裁切完成 通过/save 用临时文件地址交换永久图片地址
+    {post}
+    /save 
+    @param {string} context dir name 自定义保存的文件目录,默认为为default
+    @param {string} crop temp file path  裁剪后临时图片地址
+    @return {string} permanent file path 永久文件地址
+    发送示例请求
+    {"context":"test","temp_path":"0.0.0.0:8001/files/temp/597ad5a4a3de4.png"}
+    返回数据示例
+    {
+        "message": "success",
+        "url": image path
+    }
 
 文件上传
-/fileUpload  {wechat api证书上传}
-@params {resource} file   
-@return {string} private file name
+    /fileUpload {post}  证书上传
+    @params {resource} file   
+    @return {string} private file name
 
 数据流上传图片
-/streamUploadImage {bash64 数据流上传}
-@params {json} stream 
-@return {string} image url path
+    {post} 
+    /streamUploadImage 
+    @params {json} stream 
+    @return {string} image url path
+
+    发送示例请求
+    {'file':stream}
+    
+    返回数据示例
+    {
+        "message": "success",
+        "url": image path
+    }
 
 comment;
     return '<pre>'.$comments.'</pre>';
