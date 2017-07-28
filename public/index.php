@@ -27,25 +27,6 @@ $app = new \Slim\App();
 
 $container = $app->getContainer();
 //跨域请求
-function addHeader($req)
-{
-    return $req->header('Access-Control-Allow-Origin', '*')
-        ->header('Access-Control-Allow-Methods', 'OPTIONS,GET,POST,PUT,DELETE')
-        ->header('Access-Control-Allow-Credentials', 'true')
-        ->header('Access-Control-Max-Age', '10000')
-        ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-}
-
-//网站url
-$container['host'] = $_SERVER["HTTP_HOST"];
-//临时文件路径
-$container['tmp_file_dir'] = '/files/temp';
-//永久文件目录
-$container['files_contexts_dir'] = '/files/contexts/';
-//微信API 存储地址
-$container['wechat_api_file_path'] = 'wechat_api_file';
-
-
 $app->add(function (Request $request, Response $response, $next) {
 
     $response->withHeader('Access-Control-Allow-Origin', '*')
@@ -57,6 +38,14 @@ $app->add(function (Request $request, Response $response, $next) {
     return $next($request, $response);
 });
 
+//网站url
+$container['host'] = $_SERVER["HTTP_HOST"];
+//临时文件路径
+$container['tmp_file_dir'] = '/files/temp';
+//永久文件目录
+$container['files_contexts_dir'] = '/files/contexts/';
+//微信API 存储地址
+$container['wechat_api_file_path'] = 'wechat_api_file';
 
 $app->get('/', function (Request $req, Response $res, $args = []) {
     $comments = <<<comment
@@ -384,5 +373,5 @@ $app->post('/streamUploadImage', function (Request $req, Response $res, $args = 
 
     return $res->withJson($data);
 
-})->add(addHeader($req));
+});
 $app->run();
