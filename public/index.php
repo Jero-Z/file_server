@@ -45,6 +45,19 @@ $container['files_contexts_dir'] = '/files/contexts/';
 //微信API 存储地址
 $container['wechat_api_file_path'] = 'wechat_api_file';
 
+
+$app->add(function (Request $request, Response $response, $next) {
+
+    $response->withHeader('Access-Control-Allow-Origin', '*')
+        ->withHeader('Access-Control-Allow-Methods', 'OPTIONS,GET,POST,PUT,DELETE')
+        ->withHeader('Access-Control-Allow-Credentials', 'true')
+        ->withHeader('Access-Control-Max-Age', '10000')
+        ->withHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+
+    return $next($request, $response);
+});
+
+
 $app->get('/', function (Request $req, Response $res, $args = []) {
     $comments = <<<comment
 图片上传
@@ -107,7 +120,7 @@ $app->get('/', function (Request $req, Response $res, $args = []) {
     }
 
 comment;
-    return '<pre>'.$comments.'</pre>';
+    return '<pre>' . $comments . '</pre>';
 });
 //创建文件路径
 function Directory($dir)
@@ -329,7 +342,7 @@ $app->post('/fileUpload', function (Request $req, Response $res, $args = []) {
 
 /**
  * bash64图片上传
- * @param stream{json}
+ * @param stream {json}
  * @return image uniqid
  */
 $app->post('/streamUploadImage', function (Request $req, Response $res, $args = []) {
@@ -339,30 +352,30 @@ $app->post('/streamUploadImage', function (Request $req, Response $res, $args = 
 
     $stream = $req->getParsedBody();
 
-    $name = uniqid().'.png';
-    $filePath = WEB_ROOT.$this->get('files_contexts_dir').'default/';
-    $fullPath = $filePath.$name;
+    $name = uniqid() . '.png';
+    $filePath = WEB_ROOT . $this->get('files_contexts_dir') . 'default/';
+    $fullPath = $filePath . $name;
 
     $fullStream = array_pop($stream);
 
-    if (empty($fileStream)){
+    if (empty($fileStream)) {
         $data['message'] = 'error';
         $data['name'] = '';
     }
     //文件目录创建
     dirIsExists($filePath);
 
-    $imgStream = base64_decode(array_pop(explode(',',$fullStream)));
+    $imgStream = base64_decode(array_pop(explode(',', $fullStream)));
 
-    $result = file_put_contents($fullPath,$imgStream);
+    $result = file_put_contents($fullPath, $imgStream);
     //检查图片写入是否成功
     $imgSize = getimagesize($fullPath);
 
-    if ($result<=0 || !$imgSize){
+    if ($result <= 0 || !$imgSize) {
         $data['message'] = 'error';
         $data['name'] = '';
     }
-    $permanent_file_path = $this->get('files_contexts_dir')  . 'default/' . $name;
+    $permanent_file_path = $this->get('files_contexts_dir') . 'default/' . $name;
 
     $permanent_file_url = $_SERVER["HTTP_HOST"] . $permanent_file_path;
 
