@@ -37,7 +37,35 @@ $container['files_contexts_dir'] = '/files/contexts/';
 $container['wechat_api_file_path'] = 'wechat_api_file';
 
 $app->get('/', function (Request $req, Response $res, $args = []) {
-    return 'file-server';
+    $comments = <<<comment
+图片上传
+1.
+/upload 
+@params {resource} name=file  文件名为file的图片资源
+@return {string}  temp file path 返回临时图片地址
+2.
+/crop
+@params {string} width,height [x,y] 裁剪宽高位置
+@params {string} temp url path [url] 临时图片地址
+@return {string} crop temp file path 裁剪后临时图片地址
+3.
+/save
+@param {string} context dir name 自定义保存的文件目录,默认为为default
+@param {string} crop temp file path  裁剪后临时图片地址
+@return {string} permanent file path 永久文件地址
+
+文件上传
+/fileUpload  {wechat api证书上传}
+@params {resource} file   
+@return {string} private file name
+
+数据流上传图片
+/streamUploadImage {bash64 数据流上传}
+@params {json} stream 
+@return {string} image url path
+
+comment;
+    return '<pre>'.$comments.'</pre>';
 });
 //创建文件路径
 function Directory($dir)
