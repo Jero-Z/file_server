@@ -29,11 +29,11 @@ $container = $app->getContainer();
 //跨域请求
 $app->add(function (Request $request, Response $response, $next) {
 
-    $response->withHeader('Access-Control-Allow-Origin', '*')
-        ->withHeader('Access-Control-Allow-Methods', 'OPTIONS,GET,POST,PUT,DELETE')
-        ->withHeader('Access-Control-Allow-Credentials', 'true')
-        ->withHeader('Access-Control-Max-Age', '10000')
-        ->withHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    $response = $response->withAddedHeader('Access-Control-Allow-Origin', '*')
+        ->withAddedHeader('Access-Control-Allow-Methods', 'OPTIONS,GET,POST,PUT,DELETE')
+        ->withAddedHeader('Access-Control-Allow-Credentials', 'true')
+        ->withAddedHeader('Access-Control-Max-Age', '10000')
+        ->withAddedHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
 
     return $next($request, $response);
 });
@@ -137,6 +137,8 @@ function isLawful($uploadedFiles, $res)
 {
     if (!is_array($uploadedFiles) || empty($uploadedFiles)) {
         $data['message'] = '上传有误，请重新上传';
+
+        // XXX ？？？
         return $res->withJson($data);
     }
     //弹出上传数据为一维数组
@@ -188,7 +190,7 @@ $app->post('/upload', function (Request $req, Response $res, $args = []) {
         return $res->withJson($data);
     }
     $data['message'] = 'success';
-    $data['url'] = $_SERVER["HTTP_HOST"] . $temp_file_name;
+    $data['url'] = $req->getUri()->getBaseUrl() . $temp_file_name;
 
     return $res->withJson($data);
 });
@@ -226,18 +228,12 @@ $app->post('/crop', function (Request $req, Response $res, $args = []) {
             return json_encode($data);
         }
         $data['message'] = 'success';
-        $data['url'] = $_SERVER["HTTP_HOST"] . $crop_temp_name;
-        return json_encode($data);
+        $data['url'] = $req->getUri()->getBaseUrl(). $crop_temp_name;
 
     } catch (Exception $exception) {
         $data['message'] = 'error';
         $data['url'] = '';
-        return $res->withJson($data);
     }
-
-
-    $data['message'] = 'success';
-    $data['url'] = $crop_temp;
 
     return $res->withJson($data);
 });
@@ -262,7 +258,7 @@ $app->post('/save', function (Request $req, Response $res, $args = []) {
     $save_name = $params['context'] ? $params['context'] : 'default';
     //生成永久链接地址 路径
     $permanent_file_path = $this->get('files_contexts_dir') . $save_name . '/' . uniqid() . '.png';
-    $permanent_file_url = $_SERVER["HTTP_HOST"] . $permanent_file_path;
+    $permanent_file_url = $req->getUri()->getBaseUrl() . $permanent_file_path;
 
     //文件目录创建
     dirIsExists(WEB_ROOT . $this->get('files_contexts_dir') . $save_name);
@@ -366,7 +362,7 @@ $app->post('/streamUploadImage', function (Request $req, Response $res, $args = 
     }
     $permanent_file_path = $this->get('files_contexts_dir') . 'default/' . $name;
 
-    $permanent_file_url = $_SERVER["HTTP_HOST"] . $permanent_file_path;
+    $permanent_file_url = $req->getUri()->getBaseUrl() . $permanent_file_path;
 
     $data['message'] = 'success';
     $data['name'] = $permanent_file_url;
