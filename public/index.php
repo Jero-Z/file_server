@@ -26,6 +26,15 @@ require __DIR__ . '/../config.php';
 $app = new \Slim\App();
 
 $container = $app->getContainer();
+//跨域请求
+function addHeader($req)
+{
+    return $req->header('Access-Control-Allow-Origin', '*')
+        ->header('Access-Control-Allow-Methods', 'OPTIONS,GET,POST,PUT,DELETE')
+        ->header('Access-Control-Allow-Credentials', 'true')
+        ->header('Access-Control-Max-Age', '10000')
+        ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+}
 
 //网站url
 $container['host'] = $_SERVER["HTTP_HOST"];
@@ -327,6 +336,7 @@ $app->post('/streamUploadImage', function (Request $req, Response $res, $args = 
 
     $data = [];
 
+
     $stream = $req->getParsedBody();
 
     $name = uniqid().'.png';
@@ -361,5 +371,5 @@ $app->post('/streamUploadImage', function (Request $req, Response $res, $args = 
 
     return $res->withJson($data);
 
-});
+})->add(addHeader($req));
 $app->run();
