@@ -359,6 +359,7 @@ $app->post('/streamUploadImage', function (Request $req, Response $res, $args = 
     if ($result <= 0 || !$imgSize) {
         $data['message'] = 'error';
         $data['name'] = '';
+        return $res->withJson($data);
     }
     $permanent_file_path = $this->get('files_contexts_dir') . 'default/' . $name;
 
