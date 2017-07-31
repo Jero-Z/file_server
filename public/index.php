@@ -344,8 +344,9 @@ $app->post('/streamUploadImage', function (Request $req, Response $res, $args = 
     $fullStream = array_pop($stream);
 
     if (empty($fileStream)) {
-        $data['message'] = 'error';
+        $data['message'] = 'error data empty';
         $data['name'] = '';
+        return $res->withJson($data);
     }
     //文件目录创建
     dirIsExists($filePath);
@@ -357,7 +358,7 @@ $app->post('/streamUploadImage', function (Request $req, Response $res, $args = 
     $imgSize = getimagesize($fullPath);
 
     if ($result <= 0 || !$imgSize) {
-        $data['message'] = 'error';
+        $data['message'] = 'upload error';
         $data['name'] = '';
         return $res->withJson($data);
     }
