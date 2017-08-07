@@ -38,8 +38,6 @@ $app->add(function (Request $request, Response $response, $next) {
     return $next($request, $response);
 });
 
-//网站url
-$container['host'] = $_SERVER["HTTP_HOST"];
 //临时文件路径
 $container['tmp_file_dir'] = '/files/temp';
 //永久文件目录
@@ -145,6 +143,20 @@ function isLawful($uploadedFiles, $res)
     return array_pop($uploadedFiles);
 }
 
+//服务器响应
+function responseMessage($res, $message = null, $key, $fileUrl = null, $fileName = null)
+{
+    $data = [
+        'message' => ''
+    ];
+
+    $data['message'] = $message;
+
+    $data[$key] = $fileUrl ? $fileUrl : $fileName;
+
+    return $res->withJson($data);
+}
+
 /*
  * 上传图片文件 返回临时图片地址
   * @param resource
@@ -153,6 +165,7 @@ function isLawful($uploadedFiles, $res)
 $app->post('/upload', function (Request $req, Response $res, $args = []) {
 
     $temp_file_name = $this->get('tmp_file_dir') . '/' . uniqid() . '.png';
+
     $temp_file_path = WEB_ROOT . $temp_file_name;
     //判断文件夹是否存在
     dirIsExists(WEB_ROOT . $this->get('tmp_file_dir'));
@@ -165,10 +178,7 @@ $app->post('/upload', function (Request $req, Response $res, $args = []) {
         'image/bmp'
     ];
     // todo
-    $data = [
-        'message' => '',
-        'url' => ''
-    ];
+
     //获取上传资源
     $uploadedFiles = $req->getUploadedFiles();
 
@@ -178,21 +188,17 @@ $app->post('/upload', function (Request $req, Response $res, $args = []) {
 
     //判断mime类型
     if (!in_array($resource->mime(), $allow_type)) {
-        $data['message'] = '上传类型错误，请确定类型！';
-        return json_encode($data);
+        return responseMessage($res, 'type error please confirm', 'url');
     }
     //验证通过后转为PNG类型图片 存储于临时目录下
     $result = $resource->save($temp_file_path);
 
     if (!$result) {
-        $data['message'] = 'error';
-        $data['url'] = '';
-        return $res->withJson($data);
-    }
-    $data['message'] = 'success';
-    $data['url'] = $req->getUri()->getBaseUrl() . $temp_file_name;
 
-    return $res->withJson($data);
+        return responseMessage($res, 'error', 'url');
+
+    }
+    return responseMessage($res, 'success', 'url', ($req->getUri()->getBaseUrl() . $temp_file_name));
 });
 
 /*
@@ -202,10 +208,7 @@ $app->post('/upload', function (Request $req, Response $res, $args = []) {
  * @return crop temp file path
  */
 $app->post('/crop', function (Request $req, Response $res, $args = []) {
-    $data = [
-        'message' => '',
-        'url' => ''
-    ];
+
     // todo
     $crop_temp_name = '/files/temp/' . uniqid() . '.png';
     $crop_temp_path = WEB_ROOT . $crop_temp_name;
@@ -216,26 +219,19 @@ $app->post('/crop', function (Request $req, Response $res, $args = []) {
      */
     $parsedBody = $req->getParsedBody();
 
-    $path = convertUrl($parsedBody['url'], $this->get('host'));
+    $path = convertUrl($parsedBody['url'], $req->getUri()->getBaseUrl());
     //异常处理
     try {
         $image = Image::make($path);
 
         $result = $image->crop($parsedBody['width'], $parsedBody['height'], $parsedBody['x'], $parsedBody['y'])->save($crop_temp_path);
         if (!$result) {
-            $data['message'] = 'error';
-            $data['url'] = '';
-            return json_encode($data);
+            return responseMessage($res, 'error', 'url');
         }
-        $data['message'] = 'success';
-        $data['url'] = $req->getUri()->getBaseUrl(). $crop_temp_name;
-
+        return responseMessage($res, 'success', 'url', ($req->getUri()->getBaseUrl() . $crop_temp_name));
     } catch (Exception $exception) {
-        $data['message'] = 'error';
-        $data['url'] = '';
+        return responseMessage($res, 'error', 'url');
     }
-
-    return $res->withJson($data);
 });
 
 /*
@@ -246,18 +242,16 @@ $app->post('/crop', function (Request $req, Response $res, $args = []) {
  */
 $app->post('/save', function (Request $req, Response $res, $args = []) {
 
-    $data = [
-        'message' => '',
-        'url' => ''
-    ];
+
     // todo
     $params = $req->getParsedBody();
 
-    $path = convertUrl($params['temp_path'], $this->get('host'));
+    $path = convertUrl($params['temp_path'], $req->getUri()->getBaseUrl());
     //用户选择保存路径用户
     $save_name = $params['context'] ? $params['context'] : 'default';
     //生成永久链接地址 路径
     $permanent_file_path = $this->get('files_contexts_dir') . $save_name . '/' . uniqid() . '.png';
+
     $permanent_file_url = $req->getUri()->getBaseUrl() . $permanent_file_path;
 
     //文件目录创建
@@ -268,33 +262,18 @@ $app->post('/save', function (Request $req, Response $res, $args = []) {
 
     //返回结果
     if (!$result) {
-        $data['message'] = 'error';
-        $data['url'] = '';
-        return $res->withJson($data);
+        return responseMessage($res, 'error', 'url');
     }
-
-    $data['message'] = 'success';
-    $data['url'] = $permanent_file_url;
+    return responseMessage($res, 'success', 'url', $permanent_file_url);
 
     return $res->withJson($data);
-
 });
-
 /*
  *  上传微信API证书
  *  @param file
  *  @return private url path
  */
 $app->post('/fileUpload', function (Request $req, Response $res, $args = []) {
-    //获取用户携带token
-    /*
-     * 判断token是否合法
-    if (!true) {
-        $data['message'] = 'User unverified';
-        $data['name'] = '';
-        return $res->withJson($data);
-    }
-    */
     //文件唯一ID
     $uniqid = uniqid();
 
@@ -311,20 +290,17 @@ $app->post('/fileUpload', function (Request $req, Response $res, $args = []) {
     $filePath = './../' . $this->get('wechat_api_file_path') . '/' . $uniquenessName;
     //返回json数据
     try {
-
         $file->moveTo($filePath);
-        $data['message'] = 'success';
-        $data['name'] = $uniquenessName;
-        return $res->withJson($data);
+
+        return responseMessage($res, 'success', 'name', $uniquenessName);
 
     } catch (Exception $exception) {
-        $data['message'] = 'error';
-        $data['name'] = '';
-        return $res->withJson($data);
+
+        return responseMessage($res, 'error', 'name');
     }
 
+    return $res->withJson($data);
 });
-
 /**
  * bash64图片上传
  * @param stream {json}
@@ -343,10 +319,8 @@ $app->post('/streamUploadImage', function (Request $req, Response $res, $args = 
 
     $fullStream = array_pop($stream);
 
-    if (empty($fileStream)) {
-        $data['message'] = 'error data empty';
-        $data['name'] = '';
-        return $res->withJson($data);
+    if (empty($fullStream)) {
+        return responseMessage($res, 'error data empty', 'name');
     }
     //文件目录创建
     dirIsExists($filePath);
@@ -358,18 +332,14 @@ $app->post('/streamUploadImage', function (Request $req, Response $res, $args = 
     $imgSize = getimagesize($fullPath);
 
     if ($result <= 0 || !$imgSize) {
-        $data['message'] = 'upload error';
-        $data['name'] = '';
-        return $res->withJson($data);
+        return responseMessage($res, 'upload error', 'name');
     }
     $permanent_file_path = $this->get('files_contexts_dir') . 'default/' . $name;
 
     $permanent_file_url = $req->getUri()->getBaseUrl() . $permanent_file_path;
 
-    $data['message'] = 'success';
-    $data['name'] = $permanent_file_url;
-
-    return $res->withJson($data);
+    return responseMessage($res, 'success', 'name', $permanent_file_url);
 
 });
+
 $app->run();
