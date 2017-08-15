@@ -33,7 +33,7 @@ $app->add(function (Request $request, Response $response, $next) {
         ->withAddedHeader('Access-Control-Allow-Methods', 'OPTIONS,GET,POST,PUT,DELETE')
         ->withAddedHeader('Access-Control-Allow-Credentials', 'true')
         ->withAddedHeader('Access-Control-Max-Age', '10000')
-        ->withAddedHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+        ->withAddedHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type, Origin, No-Cache, X-Requested-With, If-Modified-Since, Pragma, Last-Modified, Cache-Control, Expires, X-E4M-With');
 
     return $next($request, $response);
 });
