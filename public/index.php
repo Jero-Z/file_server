@@ -26,6 +26,9 @@ require __DIR__ . '/../config.php';
 $app = new \Slim\App();
 
 $container = $app->getContainer();
+
+
+
 //跨域请求
 $app->add(function (Request $request, Response $response, $next) {
 
@@ -34,6 +37,13 @@ $app->add(function (Request $request, Response $response, $next) {
         ->withAddedHeader('Access-Control-Allow-Credentials', 'true')
         ->withAddedHeader('Access-Control-Max-Age', '10000')
         ->withAddedHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type, Origin, No-Cache, X-Requested-With, If-Modified-Since, Pragma, Last-Modified, Cache-Control, Expires, X-E4M-With');
+
+
+    if ($request->getMethod() == 'OPTIONS') {
+        return $response->withJson([
+            'success' => true,
+        ]);
+    }
 
     return $next($request, $response);
 });
